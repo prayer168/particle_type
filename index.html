@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portfolio Particle Hero</title>
+  <style>
+    :root {
+      --bg-1: #050816;
+      --bg-2: #080d1f;
+      --bg-3: #0a1025;
+      --white: rgba(255,255,255,0.96);
+      --white-soft: rgba(255,255,255,0.72);
+      --white-dim: rgba(255,255,255,0.46);
+      --line: rgba(255,255,255,0.12);
+      --glass: rgba(255,255,255,0.08);
+      --glass-strong: rgba(255,255,255,0.11);
+      --shadow: 0 20px 60px rgba(0,0,0,0.35);
+      --radius-xl: 28px;
+      --radius-lg: 20px;
+      --radius-pill: 999px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 15% 20%, rgba(84, 118, 255, 0.20), transparent 32%),
+        radial-gradient(circle at 85% 24%, rgba(255, 74, 176, 0.16), transparent 28%),
+        radial-gradient(circle at 50% 82%, rgba(63, 255, 227, 0.10), transparent 34%),
+        linear-gradient(180deg, var(--bg-3) 0%, var(--bg-2) 45%, var(--bg-1) 100%);
+      font-family:
+        Inter,
+        "Noto Sans TC",
+        "PingFang TC",
+        "Microsoft JhengHei",
+        system-ui,
+        sans-serif;
+      color: var(--white);
+    }
+
+    canvas {
+      position: fixed;
+      inset: 0;
+      display: block;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    .noise {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.06;
+      mix-blend-mode: soft-light;
+      background-image:
+        radial-gradient(circle at 20% 20%, rgba(255,255,255,0.18) 0.5px, transparent 1px),
+        radial-gradient(circle at 80% 40%, rgba(255,255,255,0.12) 0.5px, transparent 1px),
+        radial-gradient(circle at 60% 70%, rgba(255,255,255,0.08) 0.5px, transparent 1px);
+      background-size: 18px 18px, 24px 24px, 30px 30px;
+    }
+
+    .grid {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.08;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px);
+      background-size: 72px 72px;
+      mask-image: radial-gradient(circle at center, rgba(0,0,0,1), rgba(0,0,0,0.25) 70%, transparent 100%);
+    }
+
+    .hero {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      height: 100%;
+      display: grid;
+      place-items: center;
+      padding: 28px;
+      pointer-events: none;
+    }
+
+    .panel {
+      width: min(980px, 100%);
+      pointer-events: none;
+    }
+
+    .card {
+      pointer-events: auto;
+      width: 100%;
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--line);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04));
+      box-shadow:
+        var(--shadow),
+        inset 0 1px 0 rgba(255,255,255,0.12);
+      backdrop-filter: blur(20px) saturate(120%);
+      padding: 26px;
+      overflow: hidden;
+      position: relative;
+      isolation: isolate;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      background:
+        radial-gradient(circle at top left, rgba(114, 156, 255, 0.18), transparent 24%),
+        radial-gradient(circle at bottom right, rgba(255, 109, 190, 0.16), transparent 24%);
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: var(--radius-pill);
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.10);
+      color: var(--white-soft);
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      user-select: none;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #7fe7ff, #8f7dff 60%, #ff7bc7);
+      box-shadow: 0 0 16px rgba(136, 182, 255, 0.8);
+      flex: 0 0 auto;
+    }
+
+    .metrics {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .metric {
+      padding: 10px 14px;
+      border-radius: var(--radius-pill);
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.10);
+      color: var(--white-soft);
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .title {
+      font-size: clamp(34px, 6vw, 74px);
+      line-height: 0.98;
+      letter-spacing: -0.04em;
+      font-weight: 800;
+      max-width: 10.8ch;
+      margin-bottom: 14px;
+      text-wrap: balance;
+      text-shadow: 0 0 30px rgba(100, 140, 255, 0.10);
+    }
+
+    .title .grad {
+      background: linear-gradient(90deg, #7ee7ff 0%, #92a7ff 35%, #d38cff 65%, #ff93c2 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      filter: drop-shadow(0 0 20px rgba(133, 153, 255, 0.12));
+    }
+
+    .desc {
+      max-width: 760px;
+      color: var(--white-soft);
+      font-size: clamp(14px, 2vw, 18px);
+      line-height: 1.75;
+      margin-bottom: 24px;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto auto;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .input {
+      width: 100%;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.08);
+      color: white;
+      border-radius: var(--radius-pill);
+      padding: 16px 18px;
+      outline: none;
+      font-size: 16px;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.10),
+        0 8px 24px rgba(0,0,0,0.16);
+      transition: 0.25s ease;
+    }
+
+    .input::placeholder {
+      color: rgba(255,255,255,0.34);
+    }
+
+    .input:focus {
+      border-color: rgba(127, 172, 255, 0.46);
+      box-shadow:
+        0 0 0 4px rgba(111, 166, 255, 0.10),
+        inset 0 1px 0 rgba(255,255,255,0.12),
+        0 10px 30px rgba(0,0,0,0.22);
+    }
+
+    .btn {
+      border: 1px solid rgba(255,255,255,0.12);
+      background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.05));
+      color: white;
+      border-radius: var(--radius-pill);
+      padding: 14px 16px;
+      min-width: 108px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: transform 0.22s ease, background 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08));
+      border-color: rgba(255,255,255,0.18);
+      box-shadow: 0 14px 28px rgba(0,0,0,0.24);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn.is-active {
+      background: linear-gradient(180deg, rgba(123, 170, 255, 0.28), rgba(188, 114, 255, 0.14));
+      border-color: rgba(142, 178, 255, 0.34);
+      box-shadow:
+        0 14px 28px rgba(0,0,0,0.24),
+        0 0 0 1px rgba(140, 175, 255, 0.18) inset;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .chip {
+      padding: 10px 14px;
+      border-radius: var(--radius-pill);
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: var(--white-dim);
+      font-size: 12px;
+      user-select: none;
+    }
+
+    .footer-note {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%);
+      z-index: 11;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: calc(100vw - 32px);
+      pointer-events: none;
+    }
+
+    .footer-pill {
+      padding: 10px 14px;
+      border-radius: var(--radius-pill);
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.58);
+      font-size: 12px;
+      letter-spacing: 0.03em;
+      backdrop-filter: blur(12px);
+      user-select: none;
+    }
+
+    @media (max-width: 900px) {
+      .controls {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .btn {
+        min-width: 0;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .hero {
+        padding: 16px;
+      }
+
+      .card {
+        padding: 18px;
+        border-radius: 22px;
+      }
+
+      .controls {
+        grid-template-columns: 1fr;
+      }
+
+      .title {
+        max-width: 100%;
+      }
+
+      .topbar {
+        margin-bottom: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="scene"></canvas>
+  <div class="noise"></div>
+  <div class="grid"></div>
+
+  <main class="hero">
+    <section class="panel">
+      <div class="card">
+        <div class="topbar">
+          <div class="eyebrow">
+            <span class="dot"></span>
+            Portfolio Hero / Particle Typography
+          </div>
+          <div class="metrics">
+            <div class="metric" id="metricParticles">Particles —</div>
+            <div class="metric" id="metricMode">Mode —</div>
+            <div class="metric" id="metricWord">Text —</div>
+          </div>
+        </div>
+
+        <h1 class="title">
+          Build a <span class="grad">cinematic interactive hero</span> with living particles.
+        </h1>
+
+        <p class="desc">
+          在輸入框打字，畫面中的粒子會先消散，再帶著拖尾重新聚合成你的文字。滑鼠移動時會吸附粒子，按住滑鼠可切換成排斥模式，適合拿來當作品集首頁、展演互動頁、品牌展示頁的主視覺。
+        </p>
+
+        <div class="controls">
+          <input
+            id="textInput"
+            class="input"
+            type="text"
+            maxlength="24"
+            placeholder="輸入文字，例如：你好、HELLO、INTERACTIVE"
+            value="INTERACTIVE"
+          />
+          <button id="morphBtn" class="btn">重組文字</button>
+          <button id="burstBtn" class="btn">消散特效</button>
+          <button id="autoBtn" class="btn is-active">自動輪播：開</button>
+        </div>
+
+        <div class="chips">
+          <div class="chip">滑鼠移動：吸附粒子</div>
+          <div class="chip">按住滑鼠：切換排斥模式</div>
+          <div class="chip">空白鍵：觸發爆散</div>
+          <div class="chip">支援中文 / 英文 / 數字</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="footer-note">
+    <div class="footer-pill">Portfolio-grade Particle Hero</div>
+    <div class="footer-pill">HTML / CSS / JavaScript / Canvas</div>
+    <div class="footer-pill">Single File Demo</div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("scene");
+    const ctx = canvas.getContext("2d");
+    const textCanvas = document.createElement("canvas");
+    const textCtx = textCanvas.getContext("2d", { willReadFrequently: true });
+
+    const input = document.getElementById("textInput");
+    const morphBtn = document.getElementById("morphBtn");
+    const burstBtn = document.getElementById("burstBtn");
+    const autoBtn = document.getElementById("autoBtn");
+
+    const metricParticles = document.getElementById("metricParticles");
+    const metricMode = document.getElementById("metricMode");
+    const metricWord = document.getElementById("metricWord");
+
+    let width = 0;
+    let height = 0;
+    let dpr = 1;
+
+    let particles = [];
+    let dustParticles = [];
+    let activeText = "INTERACTIVE";
+    let sampledPoints = [];
+    let morphTimer = null;
+    let inputDebounce = null;
+    let showcaseTimer = null;
+    let statsTimer = 0;
+    let tick = 0;
+    let autoPlay = true;
+    let lastManualInteraction = Date.now();
+
+    const showcaseWords = [
+      "INTERACTIVE",
+      "PORTFOLIO",
+      "你好",
+      "DESIGN",
+      "CREATIVE CODE",
+      "粒子藝術",
+      "SHOWCASE"
+    ];
+    let showcaseIndex = 0;
+
+    const config = {
+      baseParticles: 0,
+      sampleGap: 5,
+      maxParticles: 3200,
+      textAttract: 0.050,
+      ambientAttract: 0.010,
+      friction: 0.88,
+      wander: 0.12,
+      maxSpeed: 8.4,
+      trailLength: 12,
+      dissolveBurst: 8.5,
+      mouseRadius: 180,
+      mouseStrength: 0.24,
+      repelStrength: 0.34,
+      swirlStrength: 0.05,
+      particleMin: 1.2,
+      particleMax: 3.4,
+      dustCount: 120,
+      connectionDistance: 32
+    };
+
+    const mouse = {
+      x: 0,
+      y: 0,
+      active: false,
+      down: false
+    };
+
+    function clamp(v, min, max) {
+      return Math.max(min, Math.min(max, v));
+    }
+
+    function rand(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    function lerp(a, b, t) {
+      return a + (b - a) * t;
+    }
+
+    function shuffle(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = (Math.random() * (i + 1)) | 0;
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function adaptiveConfig() {
+      const area = window.innerWidth * window.innerHeight;
+      config.baseParticles = clamp(Math.floor(area / 520), 1200, 2600);
+      config.sampleGap = window.innerWidth < 640 ? 6 : 5;
+      config.dustCount = clamp(Math.floor(area / 15000), 60, 140);
+    }
+
+    class Particle {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.vx = rand(-2.2, 2.2);
+        this.vy = rand(-2.2, 2.2);
+        this.tx = x;
+        this.ty = y;
+        this.role = "ambient";
+        this.size = rand(config.particleMin, config.particleMax);
+        this.baseSize = this.size;
+        this.alpha = rand(0.72, 1);
+        this.hue = rand(185, 325);
+        this.targetHue = this.hue;
+        this.history = [];
+        this.spark = rand(0, Math.PI * 2);
+      }
+
+      setTarget(x, y, role = "glyph", hue = this.targetHue) {
+        this.tx = x;
+        this.ty = y;
+        this.role = role;
+        this.targetHue = hue;
+      }
+
+      burstFrom(cx, cy, power = config.dissolveBurst) {
+        const angle = Math.atan2(this.y - cy, this.x - cx) + rand(-0.9, 0.9);
+        const speed = rand(power * 0.3, power);
+        this.vx += Math.cos(angle) * speed;
+        this.vy += Math.sin(angle) * speed;
+      }
+
+      update(time) {
+        const isGlyph = this.role === "glyph";
+        const attract = isGlyph ? config.textAttract : config.ambientAttract;
+        const dx = this.tx - this.x;
+        const dy = this.ty - this.y;
+
+        this.vx += dx * attract;
+        this.vy += dy * attract;
+
+        this.spark += 0.04;
+        this.vx += Math.cos(this.spark + time * 0.0002) * config.wander;
+        this.vy += Math.sin(this.spark + time * 0.00017) * config.wander;
+
+        if (mouse.active) {
+          const mx = mouse.x - this.x;
+          const my = mouse.y - this.y;
+          const dist = Math.hypot(mx, my);
+
+          if (dist < config.mouseRadius) {
+            const normalizedX = mx / (dist || 1);
+            const normalizedY = my / (dist || 1);
+            const influence = 1 - dist / config.mouseRadius;
+            const base = mouse.down ? -config.repelStrength : config.mouseStrength;
+
+            this.vx += normalizedX * base * influence * 7.5;
+            this.vy += normalizedY * base * influence * 7.5;
+
+            const swirlDir = mouse.down ? -1 : 1;
+            this.vx += -normalizedY * config.swirlStrength * influence * swirlDir * 9;
+            this.vy +=  normalizedX * config.swirlStrength * influence * swirlDir * 9;
+          }
+        }
+
+        const speed = Math.hypot(this.vx, this.vy);
+        if (speed > config.maxSpeed) {
+          this.vx = (this.vx / speed) * config.maxSpeed;
+          this.vy = (this.vy / speed) * config.maxSpeed;
+        }
+
+        this.vx *= config.friction;
+        this.vy *= config.friction;
+
+        this.x += this.vx;
+        this.y += this.vy;
+
+        this.hue = lerp(this.hue, this.targetHue, 0.08);
+
+        const motionGlow = clamp(Math.hypot(this.vx, this.vy) / 6.8, 0, 1.2);
+        this.size = this.baseSize + motionGlow * 1.1 + (isGlyph ? 0.18 : 0);
+
+        this.history.push({ x: this.x, y: this.y });
+        if (this.history.length > config.trailLength) this.history.shift();
+      }
+
+      drawTrail() {
+        if (this.history.length < 2) return;
+
+        ctx.beginPath();
+        for (let i = 0; i < this.history.length; i++) {
+          const p = this.history[i];
+          if (i === 0) ctx.moveTo(p.x, p.y);
+          else ctx.lineTo(p.x, p.y);
+        }
+
+        const alpha = this.role === "glyph" ? 0.18 : 0.07;
+        ctx.strokeStyle = `hsla(${this.hue}, 100%, 72%, ${alpha})`;
+        ctx.lineWidth = this.size * 0.95;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.stroke();
+      }
+
+      draw() {
+        ctx.beginPath();
+        ctx.fillStyle = `hsla(${this.hue}, 100%, 73%, ${this.alpha})`;
+        ctx.shadowColor = `hsla(${this.hue}, 100%, 73%, 0.95)`;
+        ctx.shadowBlur = this.role === "glyph" ? 20 : 10;
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.fillStyle = "rgba(255,255,255,0.92)";
+        ctx.shadowBlur = 0;
+        ctx.arc(this.x, this.y, this.size * 0.30, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    class Dust {
+      constructor() {
+        this.reset(true);
+      }
+
+      reset(initial = false) {
+        this.x = initial ? rand(0, width) : rand(-40, width + 40);
+        this.y = initial ? rand(0, height) : rand(-40, height + 40);
+        this.r = rand(0.6, 1.9);
+        this.alpha = rand(0.06, 0.22);
+        this.speedX = rand(-0.08, 0.08);
+        this.speedY = rand(0.04, 0.18);
+        this.phase = rand(0, Math.PI * 2);
+      }
+
+      update(time) {
+        this.phase += 0.01;
+        this.x += this.speedX + Math.cos(this.phase + time * 0.00015) * 0.03;
+        this.y += this.speedY + Math.sin(this.phase + time * 0.00012) * 0.03;
+
+        if (this.y > height + 50 || this.x < -60 || this.x > width + 60) {
+          this.reset(false);
+          this.y = -20;
+        }
+      }
+
+      draw() {
+        ctx.beginPath();
+        ctx.fillStyle = `rgba(255,255,255,${this.alpha})`;
+        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function createDust() {
+      dustParticles = [];
+      for (let i = 0; i < config.dustCount; i++) {
+        dustParticles.push(new Dust());
+      }
+    }
+
+    function ensureParticleCount(required) {
+      const capped = Math.min(required, config.maxParticles);
+      while (particles.length < capped) {
+        particles.push(new Particle(rand(0, width), rand(0, height)));
+      }
+    }
+
+    function createParticles() {
+      particles = [];
+      ensureParticleCount(config.baseParticles);
+    }
+
+    function resize() {
+      adaptiveConfig();
+
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      width = window.innerWidth;
+      height = window.innerHeight;
+
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      canvas.style.width = width + "px";
+      canvas.style.height = height + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      textCanvas.width = width;
+      textCanvas.height = height;
+
+      if (!particles.length) createParticles();
+      if (!dustParticles.length) createDust();
+
+      particles.forEach(p => {
+        p.x = clamp(p.x, 0, width);
+        p.y = clamp(p.y, 0, height);
+      });
+
+      if (activeText.trim()) {
+        assignTextTargets(activeText, false);
+      } else {
+        assignAmbientTargets();
+      }
+    }
+
+    function getHueByPosition(x, y) {
+      const nx = x / Math.max(width, 1);
+      const ny = y / Math.max(height, 1);
+
+      const c1 = 190;
+      const c2 = 245;
+      const c3 = 320;
+
+      const blendA = c1 * (1 - nx) + c2 * nx;
+      const blendB = c2 * (1 - ny) + c3 * ny;
+      return (blendA * 0.62 + blendB * 0.38) % 360;
+    }
+
+    function getDisplayText() {
+      return (activeText || "").trim() || "自由漂浮";
+    }
+
+    function textToPoints(text) {
+      const clean = (text || "").trim();
+      if (!clean) return [];
+
+      textCtx.clearRect(0, 0, width, height);
+
+      const lengthFactor = Math.max(clean.length, 2);
+      const fontSize = clamp(
+        Math.min(width * 0.82 / (lengthFactor * 0.72), height * 0.31),
+        80,
+        240
+      );
+
+      textCtx.fillStyle = "#ffffff";
+      textCtx.textAlign = "center";
+      textCtx.textBaseline = "middle";
+      textCtx.font = `900 ${fontSize}px Inter, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif`;
+      textCtx.fillText(clean, width / 2, height / 2);
+
+      const img = textCtx.getImageData(0, 0, width, height).data;
+      const points = [];
+
+      for (let y = 0; y < height; y += config.sampleGap) {
+        for (let x = 0; x < width; x += config.sampleGap) {
+          const i = (y * width + x) * 4;
+          if (img[i + 3] > 125) {
+            points.push({
+              x,
+              y,
+              hue: getHueByPosition(x, y)
+            });
+          }
+        }
+      }
+
+      return points;
+    }
+
+    function assignAmbientTargets() {
+      particles.forEach((p, i) => {
+        const angle = (i / particles.length) * Math.PI * 2 + rand(-0.7, 0.7);
+        const radius = Math.min(width, height) * rand(0.24, 0.52);
+        const offsetX = Math.cos(angle) * radius + rand(-140, 140);
+        const offsetY = Math.sin(angle) * radius + rand(-100, 100);
+        p.setTarget(
+          width * 0.5 + offsetX,
+          height * 0.53 + offsetY,
+          "ambient",
+          185 + (i % 145)
+        );
+      });
+    }
+
+    function assignTextTargets(text, reburst = false) {
+      sampledPoints = textToPoints(text);
+      ensureParticleCount(Math.max(config.baseParticles, sampledPoints.length + 240));
+
+      const pts = shuffle(sampledPoints);
+
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        if (i < pts.length) {
+          const t = pts[i];
+          p.setTarget(
+            t.x + rand(-0.8, 0.8),
+            t.y + rand(-0.8, 0.8),
+            "glyph",
+            t.hue
+          );
+        } else {
+          const angle = rand(0, Math.PI * 2);
+          const radius = Math.max(width, height) * rand(0.28, 0.58);
+          p.setTarget(
+            width * 0.5 + Math.cos(angle) * radius + rand(-50, 50),
+            height * 0.5 + Math.sin(angle) * radius + rand(-50, 50),
+            "ambient",
+            190 + (i % 135)
+          );
+        }
+
+        if (reburst && i < pts.length) {
+          p.vx += rand(-1.4, 1.4);
+          p.vy += rand(-1.4, 1.4);
+        }
+      }
+    }
+
+    function burstAll(power = config.dissolveBurst) {
+      const cx = width * 0.5;
+      const cy = height * 0.5;
+      particles.forEach(p => {
+        p.role = "ambient";
+        p.burstFrom(cx, cy, power);
+      });
+    }
+
+    function morphToText(nextText = "") {
+      clearTimeout(morphTimer);
+
+      burstAll(config.dissolveBurst);
+
+      morphTimer = setTimeout(() => {
+        activeText = nextText;
+        if ((nextText || "").trim()) {
+          assignTextTargets(nextText, true);
+        } else {
+          assignAmbientTargets();
+        }
+        updateMetrics();
+      }, 360);
+    }
+
+    function updateMetrics() {
+      metricParticles.textContent = `Particles ${particles.length}`;
+      metricMode.textContent = `Mode ${mouse.down ? "Repel" : "Attract"}`;
+      metricWord.textContent = `Text ${getDisplayText()}`;
+      autoBtn.textContent = `自動輪播：${autoPlay ? "開" : "關"}`;
+      autoBtn.classList.toggle("is-active", autoPlay);
+    }
+
+    function renderBackground(time) {
+      ctx.fillStyle = "rgba(4, 8, 20, 0.16)";
+      ctx.fillRect(0, 0, width, height);
+
+      const glowA = { x: width * 0.20 + Math.sin(time * 0.00040) * 100, y: height * 0.24 + Math.cos(time * 0.00031) * 60, r: 340 };
+      const glowB = { x: width * 0.80 + Math.cos(time * 0.00035) * 110, y: height * 0.28 + Math.sin(time * 0.00028) * 70, r: 360 };
+      const glowC = { x: width * 0.52 + Math.sin(time * 0.00023) * 130, y: height * 0.80 + Math.cos(time * 0.00019) * 50, r: 420 };
+
+      drawGlow(glowA.x, glowA.y, glowA.r, "rgba(91, 121, 255, 0.18)");
+      drawGlow(glowB.x, glowB.y, glowB.r, "rgba(255, 87, 191, 0.12)");
+      drawGlow(glowC.x, glowC.y, glowC.r, "rgba(70, 255, 224, 0.08)");
+
+      if (mouse.active) {
+        const color = mouse.down
+          ? "rgba(255, 120, 180, 0.11)"
+          : "rgba(120, 175, 255, 0.12)";
+        drawGlow(mouse.x, mouse.y, 150, color);
+      }
+    }
+
+    function drawGlow(x, y, radius, color) {
+      const g = ctx.createRadialGradient(x, y, 0, x, y, radius);
+      g.addColorStop(0, color);
+      g.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.globalCompositeOperation = "screen";
+      ctx.fillStyle = g;
+      ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+      ctx.globalCompositeOperation = "source-over";
+    }
+
+    function drawConnections() {
+      const glyphs = particles.filter(p => p.role === "glyph");
+      const limit = Math.min(glyphs.length, 240);
+
+      ctx.lineWidth = 1;
+      for (let i = 0; i < limit; i += 3) {
+        const a = glyphs[i];
+        for (let j = i + 1; j < Math.min(i + 8, limit); j++) {
+          const b = glyphs[j];
+          const dx = a.x - b.x;
+          const dy = a.y - b.y;
+          const dist = Math.hypot(dx, dy);
+
+          if (dist < config.connectionDistance) {
+            const alpha = (1 - dist / config.connectionDistance) * 0.10;
+            ctx.beginPath();
+            ctx.strokeStyle = `hsla(${(a.hue + b.hue) * 0.5}, 100%, 75%, ${alpha})`;
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+          }
+        }
+      }
+    }
+
+    function drawCursor() {
+      if (!mouse.active) return;
+
+      ctx.beginPath();
+      ctx.strokeStyle = mouse.down
+        ? "rgba(255, 122, 186, 0.26)"
+        : "rgba(145, 205, 255, 0.26)";
+      ctx.lineWidth = 1.2;
+      ctx.arc(mouse.x, mouse.y, 26 + Math.sin(tick * 0.08) * 2.4, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.fillStyle = "rgba(255,255,255,0.9)";
+      ctx.arc(mouse.x, mouse.y, 2.4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function animate(time = 0) {
+      tick++;
+      renderBackground(time);
+
+      for (const d of dustParticles) {
+        d.update(time);
+        d.draw();
+      }
+
+      for (const p of particles) {
+        p.update(time);
+        p.drawTrail();
+      }
+
+      drawConnections();
+
+      for (const p of particles) {
+        p.draw();
+      }
+
+      drawCursor();
+
+      if (time - statsTimer > 220) {
+        statsTimer = time;
+        updateMetrics();
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    function scheduleAutoPlay() {
+      clearInterval(showcaseTimer);
+      showcaseTimer = setInterval(() => {
+        if (!autoPlay) return;
+        if (Date.now() - lastManualInteraction < 5000) return;
+
+        showcaseIndex = (showcaseIndex + 1) % showcaseWords.length;
+        const next = showcaseWords[showcaseIndex];
+        input.value = next;
+        morphToText(next);
+      }, 4200);
+    }
+
+    input.addEventListener("input", e => {
+      clearTimeout(inputDebounce);
+      lastManualInteraction = Date.now();
+      const nextText = e.target.value;
+      inputDebounce = setTimeout(() => {
+        morphToText(nextText);
+      }, 120);
+    });
+
+    morphBtn.addEventListener("click", () => {
+      lastManualInteraction = Date.now();
+      morphToText(input.value);
+    });
+
+    burstBtn.addEventListener("click", () => {
+      lastManualInteraction = Date.now();
+      burstAll(10.5);
+      clearTimeout(morphTimer);
+      morphTimer = setTimeout(() => {
+        if ((input.value || "").trim()) {
+          activeText = input.value;
+          assignTextTargets(input.value, true);
+        } else {
+          activeText = "";
+          assignAmbientTargets();
+        }
+      }, 330);
+    });
+
+    autoBtn.addEventListener("click", () => {
+      autoPlay = !autoPlay;
+      lastManualInteraction = Date.now();
+      updateMetrics();
+    });
+
+    window.addEventListener("mousemove", e => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+      mouse.active = true;
+    });
+
+    window.addEventListener("mousedown", () => {
+      mouse.down = true;
+      lastManualInteraction = Date.now();
+      updateMetrics();
+    });
+
+    window.addEventListener("mouseup", () => {
+      mouse.down = false;
+      updateMetrics();
+    });
+
+    window.addEventListener("mouseleave", () => {
+      mouse.active = false;
+      mouse.down = false;
+      updateMetrics();
+    });
+
+    window.addEventListener("touchstart", e => {
+      if (!e.touches[0]) return;
+      mouse.x = e.touches[0].clientX;
+      mouse.y = e.touches[0].clientY;
+      mouse.active = true;
+      lastManualInteraction = Date.now();
+    }, { passive: true });
+
+    window.addEventListener("touchmove", e => {
+      if (!e.touches[0]) return;
+      mouse.x = e.touches[0].clientX;
+      mouse.y = e.touches[0].clientY;
+      mouse.active = true;
+    }, { passive: true });
+
+    window.addEventListener("touchend", () => {
+      mouse.active = false;
+      mouse.down = false;
+      updateMetrics();
+    }, { passive: true });
+
+    window.addEventListener("keydown", e => {
+      if (e.code === "Space") {
+        e.preventDefault();
+        lastManualInteraction = Date.now();
+        burstAll(11);
+      }
+
+      if (e.key === "Enter") {
+        lastManualInteraction = Date.now();
+        morphToText(input.value);
+      }
+    });
+
+    window.addEventListener("resize", resize);
+
+    resize();
+    assignTextTargets(activeText);
+    updateMetrics();
+    scheduleAutoPlay();
+    animate();
+  </script>
+</body>
+</html>
